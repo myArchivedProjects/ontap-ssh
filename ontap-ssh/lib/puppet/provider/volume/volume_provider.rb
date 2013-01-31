@@ -2,6 +2,7 @@ require 'rubygems'
 require 'net/ssh'
 
 Puppet::Type.type(:volume).provide(:volume_provider) do
+begin
 	desc 'manages netapp volumes'
 
 	def connection(value, results)
@@ -77,7 +78,7 @@ Puppet::Type.type(:volume).provide(:volume_provider) do
 				Puppet.debug('exist? = false: volume need changes')
 				false
 			else
-				Puppet.debug('exist? = true: no changes need changes')
+				Puppet.debug('exist? = true: no changes needed')
 				true
 			end#ifstate
 	end#def exists?
@@ -219,8 +220,8 @@ Puppet::Type.type(:volume).provide(:volume_provider) do
 		end#if/else create volume
 	end#create
 
-
 	def destroy
+		Puppet.debug('destroy')
 		command = "volume unmount -vserver " + resource[:vserver_name] + " -volume " + resource[:volume] 
 		results = ''
 		output = connection(command, results) #not validating this yet
@@ -232,12 +233,13 @@ Puppet::Type.type(:volume).provide(:volume_provider) do
 		command = "volume destroy -vserver " + resource[:vserver_name] + " -volume " + resource[:volume] + " -force"
 		results = ''
 		output = connection(command, results) #not validating this yet
-			if output.include? "destroyed"
-				puts "we did well"
-				true
-			else
-				puts "failed miserably"
-				false
-			end
+		if output.include? "destroyed"
+			puts "we did well"
+			true
+		else
+			puts "failed miserably"
+			false
+		end
 	end#def destroy
+end#volume:provider
 
