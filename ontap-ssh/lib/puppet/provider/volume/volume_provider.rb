@@ -8,6 +8,11 @@ Puppet::Type.type(:volume).provide(:volume_provider) do
 		#exists? should return false 
 		#if the defined parameters in the resource
 		#do not match the current state
+		#
+		# checking if we can use our new class
+		#
+
+		#
 		Puppet.debug('exists?')
 		Net::SSH.start( resource[:cmgmt] , resource[:cuser] , :password => resource[:cpass] ) do |ssh|
 			        output = ssh.exec!("volume show -vserver " + resource[:vserver_name] \
