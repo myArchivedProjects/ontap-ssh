@@ -131,7 +131,14 @@ Puppet::Type.type(:volume).provide(:volume_provider) do
 				Puppet.debug('volume create -> : changes needed')
 				results = ''
 				output = ONTAPfunctions::connection(filerargs, command, results)
-				return true
+				#return true
+				#check if the volume exists
+                		if (self.exists?)
+					Puppet.debug( "volume create -> volume modified sucessfully")
+					return true
+				else
+					raise Puppet::ParseError, "Volume create -> Volume modify failed"
+				end
 			end##if state
 
 		else#create volume
@@ -194,14 +201,14 @@ Puppet::Type.type(:volume).provide(:volume_provider) do
 			filerargs = [ resource[:cmgmt] , resource[:cuser] , resource[:cpass] ]
 			results = ''
 			output = ONTAPfunctions::connection(filerargs, command, results)
-			if output.include? "Successful"
-				Puppet.debug('volume create -> true: volume created sucessfully: ')
+			#check if the volume exists
+                	if (self.exists?)
+				Puppet.debug( "volume create -> volume created sucessfully")
 				return true
 			else
-				Puppet.debug('volume create -> false: volume create failed: ')
-				raise Puppet::ParseError, "volume create -> false: volume create failed: "
+				raise Puppet::ParseError, "Volume create -> Volume create failed"
 			end
-		end#if/else create volume
+		end#if/else
 	end#create
 
 	def destroy
@@ -218,12 +225,13 @@ Puppet::Type.type(:volume).provide(:volume_provider) do
 		command = "volume destroy -vserver " + resource[:vserver_name] + " -volume " + resource[:volume] + " -force"
 		results = ''
 		output = ONTAPfunctions::connection(filerargs, command, results)
-		if output.include? "destroyed"
-			puts "we did well"
-			return true
+		#check if volume was deleted sucessfully
+                if (self.exists?)
+			raise Puppet::ParseError, "Volume destroy -> Volume destroy failed"
+			return false
 		else
-			puts "failed miserably"
-			raise Puppet::ParseError, "volume destroy -> false: volume destroy failed: "
+			Puppet.debug( "volume destroy -> volume destroy sucessfully")
+			return true
 		end
 	end#def destroy
 
