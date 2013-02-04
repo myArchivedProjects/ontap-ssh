@@ -37,11 +37,19 @@ Puppet::Type.type(:ontap_user).provide(:ontap_user_provider) do
 							when /Please enter it again:/
 								channel.send_data resource[:password] + "\n"
 								puts "**********"
-							end
-					end
+						end#case
+					end#ssh.exec/do loop
 
-		end
-	end
+		end#net.ssh.start
+
+                if (self.exists?)
+			Puppet.debug( "user create -> user created sucessfully")
+			return true
+		else
+			raise Puppet::ParseError, "user create -> user create failed"
+		end#if output.include
+
+	end#def create
 
 
 	def destroy
@@ -55,7 +63,15 @@ Puppet::Type.type(:ontap_user).provide(:ontap_user_provider) do
 
 		output = ONTAPfunctions::connection(filerargs, command, results)
 		Puppet.debug('user destroy -> results :' + results.to_s )
-	
+
+
+                if (self.exists?)
+			raise Puppet::ParseError, "user destroy -> user destroy failed"
+			return false
+		else
+			Puppet.debug("user destroy -> user deleted sucessfully")
+			return true
+		end#if output.include
 	end#def destroy
 
 end
