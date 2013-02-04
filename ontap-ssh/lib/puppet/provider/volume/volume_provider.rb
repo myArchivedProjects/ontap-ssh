@@ -57,6 +57,14 @@ Puppet::Type.type(:volume).provide(:volume_provider) do
 			Puppet.debug('volume exists? -> space guarantee needs changes')
 			state = "need changes"
 		end
+		#check for volume state
+		unless (resource[:volume_state] == output.scan(/.*Volume State:.(.*)/).to_s.chomp)#re: C
+			Puppet.debug('volume exists? ->  volume state needs changes')
+			state = "need changes"
+		end
+
+
+
 
 		#set results			
 		if state == "need changes"
