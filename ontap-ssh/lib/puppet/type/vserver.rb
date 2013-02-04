@@ -4,7 +4,7 @@ Puppet::Type.newtype(:vserver) do
 	ensurable 
 
 #properties or parameters always match the naming specified in the ONTAP API zoom tool
-	newparam(:name, :namevar => true) do
+	newparam(:vserver_name, :namevar => true) do
 		desc 'the name of the vserver'
 	end
 	newparam(:cuser) do

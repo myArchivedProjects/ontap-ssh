@@ -1,86 +1,71 @@
 require 'rubygems'
 require 'net/ssh'
+require File.dirname(__FILE__) + '/../ONTAPfunctions/ONTAPfunctions.rb'
+include ONTAPfunctions
 
 Puppet::Type.type(:volume).provide(:volume_provider) do
-begin
 	desc 'manages netapp volumes'
-
-	def connection(value, results)
-		#connects to the netapp cluster management interface using the resource definitions
-		#and executes the arguments defined in the 'value' array
-		#returning results
-
-		Puppet.debug('initiating connection')
-		ssh = Net::SSH.start( resource[:cmgmt] , resource[:cuser] , :password => resource[:cpass] )
-		output = ssh.exec!(value)
-		Puppet.debug('value = ' + value)
-		return output
-	end
-
 
 	def exists?
 		#exists? should return false 
 		#if the defined parameters in the resource
 		#do not match the current state
 		#
-		# checking if we can use our new class
+		Puppet.debug('volume exists? -> entering')
+		filerargs = [ resource[:cmgmt] , resource[:cuser] , resource[:cpass] ]
+		command = "volume show -vserver " + resource[:vserver_name] + " -volume " + resource[:volume]
+		results = ''
+		output = ONTAPfunctions::connection(filerargs, command, results)
+		unless output.include? "Volume Name:"
+			Puppet.debug('volume exists> -> no volume with that name')
+			return false
+		end#unless
+		Puppet.debug('volume exists? -> there is a volume, lets find out if it needs changes')
+		#lets find out if it needs fixing
+		state = "nochanges"
+		#check for size changes
+		unless (resource[:size].upcase == output.scan(/.*Volume Size:.*(\d.*[MB|GB|TB]).*/).to_s)#re: Volume Size: 1GB
+			Puppet.debug('volume exists? -> size need changes')
+			state = "need changes"
+		end
+		#check for group id changes
+		unless (resource[:group_id] == output.scan(/.*Group ID:.*(\d.*).*/).to_s.chomp)#re: Group ID: 0
+			Puppet.debug('volume exists? -> group id need changes')
+			state = "need changes"
+		end
+		#check for user id changes
+		unless (resource[:user_id] == output.scan(/.*User ID:.*(\d.*).*/).to_s.chomp)#re: User ID: 0
+			Puppet.debug('volume exists? -> user id need changes')
+			state = "need changes"
+		end
+		#check for unix permissions
 		#
-
 		#
-		Puppet.debug('exists?')
-			command = "volume show -vserver " + resource[:vserver_name] + " -volume " + resource[:volume] 
-			results = ''
-			output = connection(command, results)
-			unless output.include? "Volume Name:"
-				Puppet.debug('exists? = false, no volume with that name')
-				false
-			end#unless
-			Puppet.debug('exists? = pending, there is a volume, lets find out if it needs changes')
-			#lets find out if it needs fixing
-			state = "nochanges"
-			#check for size changes
-			unless (resource[:size].upcase == output.scan(/.*Volume Size:.*(\d.*[MB|GB|TB]).*/).to_s)#re: Volume Size: 1GB
-				Puppet.debug('size need changes')
-				state = "need changes"
-			end
-			#check for group id changes
-			unless (resource[:group_id] == output.scan(/.*Group ID:.*(\d.*).*/).to_s.chomp)#re: Group ID: 0
-				Puppet.debug('group id need changes')
-				state = "need changes"
-			end
-			#check for user id changes
-			unless (resource[:user_id] == output.scan(/.*User ID:.*(\d.*).*/).to_s.chomp)#re: User ID: 0
-				Puppet.debug('user id need changes')
-				state = "need changes"
-			end
-			#check for unix permissions
-			#
-			#
-			#
-			#check for volume comment
-			unless (resource[:volume_comment] == output.scan(/.*Comment:.(.*)/).to_s.chomp)#re: Comment: bla bal
-				Puppet.debug('volume comment field need changes')
-				state = "need changes"
-			end
-			#check for volume security style
-			unless (resource[:volume_security_style] == output.scan(/.*Security Style:.(.*)/).to_s.chomp)#re: Comment: bla bal
-				Puppet.debug('volume security style needs changes')
-				state = "need changes"
-			end
-			#check for space guarantee
-			unless (resource[:space_guarantee] == output.scan(/.*Space Guarantee Style:.(.*)/).to_s.chomp)#re: Comment: bla bal
-				Puppet.debug('space guarantee needs changes')
-				state = "need changes"
-			end
+		#
+		#check for volume comment
+		unless (resource[:volume_comment] == output.scan(/.*Comment:.(.*)/).to_s.chomp)#re: Comment: bla bal
+			Puppet.debug('volume exists? -> volume comment field need changes')
+			state = "need changes"
+		end
+		#check for volume security style
+		unless (resource[:volume_security_style] == output.scan(/.*Security Style:.(.*)/).to_s.chomp)#re: Comment: bla bal
+			Puppet.debug('volume exists? -> volume security style needs changes')
+			state = "need changes"
+		end
+		#check for space guarantee
+		unless (resource[:space_guarantee] == output.scan(/.*Space Guarantee Style:.(.*)/).to_s.chomp)#re: Comment: bla bal
+			Puppet.debug('volume exists? -> space guarantee needs changes')
+			state = "need changes"
+		end
 
-			#set results			
-			if state == "need changes"
-				Puppet.debug('exist? = false: volume need changes')
-				false
-			else
-				Puppet.debug('exist? = true: no changes needed')
-				true
-			end#ifstate
+		#set results			
+		if state == "need changes"
+			Puppet.debug('volume exists? -> exist? = false: volume need changes')
+			false
+		else
+			Puppet.debug('volume exists? -> exist? = true: no changes needed')
+			true
+		end#ifstate
 	end#def exists?
 
 
@@ -88,13 +73,14 @@ begin
 	def create
 		#create, should create the volume if it doesn't exist
 		#or modify it to the correct parameters if it exists
-		Puppet.debug('create')
+		Puppet.debug('volume create -> entering')
+		filerargs = [ resource[:cmgmt] , resource[:cuser] , resource[:cpass] ]
 		command = "volume show -vserver " + resource[:vserver_name] + " -volume " + resource[:volume] 
 		results = ''
-		output = connection(command, results)
+		output = ONTAPfunctions::connection(filerargs, command, results)
 		if output.include? "Volume Name:"
 			#there is a volume, lets find out if it needs fixing
-			Puppet.debug('create: found a volume with that name, lets find out if it needs changes')
+			Puppet.debug('volume create -> found a volume with that name, lets find out if it needs changes')
 			state = "nochanges"
 		        command = "volume modify -vserver " + resource[:vserver_name] + " -volume " + resource[:name]
 
@@ -125,13 +111,13 @@ begin
 			end
 			#check for space guarantee
 			unless (resource[:space_guarantee] == output.scan(/.*Space Guarantee Style:.(.*)/).to_s.chomp)#re: C
-				Puppet.debug('space guarantee needs changes')
+				Puppet.debug('volume create -> space guarantee needs changes')
 				command += " -space-guarantee " + resource[:space_guarantee] 
 				state = "need changes"
 			end
 			#check for volume state
 			unless (resource[:volume_state] == output.scan(/.*Volume State:.(.*)/).to_s.chomp)#re: C
-				Puppet.debug(' volume state needs changes')
+				Puppet.debug('volume create ->  volume state needs changes')
 				command += " -state " + resource[:volume_state] 
 				state = "need changes"
 			end
@@ -139,14 +125,14 @@ begin
 			#apply changes if needed	
 			if state == "no changes needed"
 				puts "no changes needed"
-				true
+				Puppet.debug('volume create ->  true: no changes needed')
+				return true
 			else
-				puts "changes needed"
-
-				Puppet.debug('executing: ' + command)
+				Puppet.debug('volume create -> : changes needed')
 				results = ''
-				output = connection(command, results)
-			end#ifstate
+				output = ONTAPfunctions::connection(filerargs, command, results)
+				return true
+			end##if state
 
 		else#create volume
 			#no vol with that name, lets create a volume
@@ -157,7 +143,7 @@ begin
 			#
 			if defined? resource[:size]
 				command += " -size " + resource[:size] 
-				Puppet.debug('adding size')
+				Puppet.debug('volume create -> adding size')
 			end
 			if defined? resource[:group_id]
 				command += " -group " + resource[:group_id] 
@@ -205,41 +191,40 @@ begin
 				command += " -junction-path " + resource[:junction_path] 
 			end
 
-			Puppet.debug('executing: ' + command)
+			filerargs = [ resource[:cmgmt] , resource[:cuser] , resource[:cpass] ]
 			results = ''
-			output = connection(command, results)
-			end#ifstate
-			if output.include? "Sucessfull:"
-				puts "we did well"
-				true
+			output = ONTAPfunctions::connection(filerargs, command, results)
+			if output.include? "Successful"
+				Puppet.debug('volume create -> true: volume created sucessfully: ')
+				return true
 			else
-				puts "failed miserably"
-				puts output
-				false
+				Puppet.debug('volume create -> false: volume create failed: ')
+				raise Puppet::ParseError, "volume create -> false: volume create failed: "
 			end
 		end#if/else create volume
 	end#create
 
 	def destroy
-		Puppet.debug('destroy')
+		Puppet.debug('volume create -> destroy')
+		filerargs = [ resource[:cmgmt] , resource[:cuser] , resource[:cpass] ]
 		command = "volume unmount -vserver " + resource[:vserver_name] + " -volume " + resource[:volume] 
 		results = ''
-		output = connection(command, results) #not validating this yet
+		output = ONTAPfunctions::connection(filerargs, command, results)
 
 		command = "volume offline -vserver " + resource[:vserver_name] + " -volume " + resource[:volume] 
 		results = ''
-		output = connection(command, results) #not validating this yet
+		output = ONTAPfunctions::connection(filerargs, command, results)
 
 		command = "volume destroy -vserver " + resource[:vserver_name] + " -volume " + resource[:volume] + " -force"
 		results = ''
-		output = connection(command, results) #not validating this yet
+		output = ONTAPfunctions::connection(filerargs, command, results)
 		if output.include? "destroyed"
 			puts "we did well"
-			true
+			return true
 		else
 			puts "failed miserably"
-			false
+			raise Puppet::ParseError, "volume destroy -> false: volume destroy failed: "
 		end
 	end#def destroy
-end#volume:provider
 
+end#volume:provider
