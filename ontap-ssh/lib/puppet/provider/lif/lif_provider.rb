@@ -14,11 +14,11 @@ Puppet::Type.type(:lif).provide(:lif_provider) do
 		results = ''
 		output = ONTAPfunctions::connection(filerargs, command, results)
 		if output.include? "Logical Interface Name:"
-			puts "LIF exists? -> found lif with that name"
-			true
+			Puppet.debug("LIF exists? -> found lif with that name")
+			return true
 		else
-			puts "LIF exists? -> no matching lif found with that name"
-			false
+			Puppet.debug( "LIF exists? -> no matching lif found with that name")
+			return false
 		end#if output.include
 	end#def exist?
 
@@ -37,12 +37,12 @@ Puppet::Type.type(:lif).provide(:lif_provider) do
 		command += " -firewall-policy " + resource[:firewall_policy] 
 		results = ''
 		output = ONTAPfunctions::connection(filerargs, command, results)
-		if output.include? "successfully"
-			puts "LIF create -> lif created sucessfully"
-			true
+
+		if (self.exists?)
+			Puppet.debug( "LIF create -> lif created sucessfully")
+			return true
 		else
 			raise Puppet::ParseError, "LIF create -> lif create failed"
-			puts output
 		end#if output.include
 	end#def create
 
@@ -54,6 +54,13 @@ Puppet::Type.type(:lif).provide(:lif_provider) do
 		command += " -lif " + resource[:name]
 		results = ''
 		output = ONTAPfunctions::connection(filerargs, command, results)
+
+		if (self.exists?)
+			raise Puppet::ParseError, "LIF destroy-> lif destroy failed"
+		else
+			Puppet.debug("LIF destroy -> lif destroy sucessfully")
+		end
+
 	end#def destroy
 
 end
