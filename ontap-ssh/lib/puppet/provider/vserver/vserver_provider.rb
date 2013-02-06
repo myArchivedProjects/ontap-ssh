@@ -176,10 +176,10 @@ Puppet::Type.type(:vserver).provide(:vserver_provider) do
 	        		command += " -rootvolume-security-style " + resource[:root_volume_security_style]
 				# the following are optional parameters
 				# 
-				# if defined? resource[:parameter]
-				# 	command+= " -parameter " + resource[:parameter]
-				# 	Puppet.debut("vserver create -> adding paramter")
-				# end
+				if defined? resource[:comment]
+				 	command+= " -comment " + resource[:comment]
+				 	Puppet.debut("vserver create -> adding comment")
+				end
 				#
 				#
 				# end of optional parameters
