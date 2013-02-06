@@ -54,26 +54,29 @@ Puppet::Type.type(:lif).provide(:lif_provider) do
 
 		#match lif properties with definitions in the manifest
 		state = "nochanges"
-		case property
-			when "firewall_policy", "all"
-				#check for role changes
-				unless (resource[:firewall_policy].upcase == output.scan(/.*Firewall Policy:.(.*)/).to_s.upcase.chomp)#re: Role: data
-					Puppet.debug('lif modify? -> firewall policy need changes')
-					state = "need changes"
-				end
-			when "home_node", "all"
-				#check for home-node changes
-				unless (resource[:home_node].upcase == output.scan(/.*Home Node:.(.*)/).to_s.upcase.chomp)
-					Puppet.debug('lif modify? -> home node need changes')
-					state = "need changes"
-				end
-			when "home_port", "all"
-				#check for home-port changes
-				unless (resource[:home_port].upcase == output.scan(/.*Home Port:.(.*)/).to_s.upcase.chomp)
-					Puppet.debug('lif modify? -> home port need changes')
-					state = "need changes"
-				end
-		end #case
+
+		if (  [ "firewall_policy","all" ].include?(property) )
+			#check for role changes
+			unless (resource[:firewall_policy].upcase == output.scan(/.*Firewall Policy:.(.*)/).to_s.upcase.chomp)#re: Role: data
+				Puppet.debug('lif modify? -> firewall policy need changes')
+				state = "need changes"
+			end
+		end
+		if (  [ "home_node","all" ].include?(property) )
+			#check for home-node changes
+			unless (resource[:home_node].upcase == output.scan(/.*Home Node:.(.*)/).to_s.upcase.chomp)
+				Puppet.debug('lif modify? -> home node need changes')
+				state = "need changes"
+			end
+		end
+		if (  [ "home_port","all" ].include?(property) )
+			#check for home-port changes
+			unless (resource[:home_port].upcase == output.scan(/.*Home Port:.(.*)/).to_s.upcase.chomp)
+				Puppet.debug('lif modify? -> home port need changes')
+				state = "need changes"
+			end
+		end
+
        		#set results                    
 		if state == "need changes"
 			Puppet.debug('lif modify? -> exist? = true: lif need changes')

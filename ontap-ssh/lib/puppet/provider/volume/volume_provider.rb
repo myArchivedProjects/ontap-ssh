@@ -58,50 +58,56 @@ Puppet::Type.type(:volume).provide(:volume_provider) do
 		Puppet.debug('volume modify? -> there is a volume, lets find out if it needs changes')
                 #match volume properties with definitions in the manifest
 		state = "nochanges"
-		case property
-			when "size", "all"
-				#check for size changes
-				unless (resource[:size].upcase == output.scan(/.*Volume Size:.*(\d.*[MB|GB|TB]).*/).to_s)#re: Volume Size: 1GB
-					Puppet.debug('volume exists? -> size need changes')
-					state = "need changes"
-				end
-			when "group_id", "all"
-				#check for group id changes
-				unless (resource[:group_id] == output.scan(/.*Group ID:.*(\d.*).*/).to_s.chomp)#re: Group ID: 0
-					Puppet.debug('volume exists? -> group id need changes')
-					state = "need changes"
-				end
-			when "user_id", "all"
-				#check for user id changes
-				unless (resource[:user_id] == output.scan(/.*User ID:.*(\d.*).*/).to_s.chomp)#re: User ID: 0
-					Puppet.debug('volume exists? -> user id need changes')
-					state = "need changes"
-				end
-			when "volume_comment", "all"
-				#check for volume comment
-				unless (resource[:volume_comment] == output.scan(/.*Comment:.(.*)/).to_s.chomp)#re: Comment: bla bal
-					Puppet.debug('volume exists? -> volume comment field need changes')
-					state = "need changes"
-				end
-			when "volume_security_style", "all"
-				#check for volume security style
-				unless (resource[:volume_security_style] == output.scan(/.*Security Style:.(.*)/).to_s.chomp)#re: Comment: bla bal
-					Puppet.debug('volume exists? -> volume security style needs changes')
-					state = "need changes"
-				end
-			when "space_guarantee", "all"
-				#check for space guarantee
-				unless (resource[:space_guarantee] == output.scan(/.*Space Guarantee Style:.(.*)/).to_s.chomp)#re: Comment: bla bal
-					Puppet.debug('volume exists? -> space guarantee needs changes')
-					state = "need changes"
-				end
-			when "volume_state", "all"
-				#check for volume state
-				unless (resource[:volume_state] == output.scan(/.*Volume State:.(.*)/).to_s.chomp)#re: C
-					Puppet.debug('volume exists? ->  volume state needs changes')
-					state = "need changes"
-				end
-		end#case
+
+		if (  [ "size","all" ].include?(property) )
+			#check for size changes
+			unless (resource[:size].upcase == output.scan(/.*Volume Size:.*(\d.*[MB|GB|TB]).*/).to_s)#re: Volume Size: 1GB
+				Puppet.debug('volume exists? -> size need changes')
+				state = "need changes"
+			end
+		end
+		if (  [ "group_id","all" ].include?(property) )
+			#check for group id changes
+			unless (resource[:group_id] == output.scan(/.*Group ID:.*(\d.*).*/).to_s.chomp)#re: Group ID: 0
+				Puppet.debug('volume exists? -> group id need changes')
+				state = "need changes"
+			end
+		end
+		if (  [ "user_id","all" ].include?(property) )
+			#check for user id changes
+			unless (resource[:user_id] == output.scan(/.*User ID:.*(\d.*).*/).to_s.chomp)#re: User ID: 0
+				Puppet.debug('volume exists? -> user id need changes')
+				state = "need changes"
+			end
+		end
+		if (  [ "volume_comment","all" ].include?(property) )
+			#check for volume comment
+			unless (resource[:volume_comment] == output.scan(/.*Comment:.(.*)/).to_s.chomp)#re: Comment: bla bal
+				Puppet.debug('volume exists? -> volume comment field need changes')
+				state = "need changes"
+			end
+		end
+		if (  [ "volume_security_style","all" ].include?(property) )
+			#check for volume security style
+			unless (resource[:volume_security_style] == output.scan(/.*Security Style:.(.*)/).to_s.chomp)#re: Comment: bla bal
+				Puppet.debug('volume exists? -> volume security style needs changes')
+				state = "need changes"
+			end
+		end
+		if (  [ "space_guarantee","all" ].include?(property) )
+			#check for space guarantee
+			unless (resource[:space_guarantee] == output.scan(/.*Space Guarantee Style:.(.*)/).to_s.chomp)#re: Comment: bla bal
+				Puppet.debug('volume exists? -> space guarantee needs changes')
+				state = "need changes"
+			end
+		end
+		if (  [ "volume_state","all" ].include?(property) )
+			#check for volume state
+			unless (resource[:volume_state] == output.scan(/.*Volume State:.(.*)/).to_s.chomp)#re: C
+				Puppet.debug('volume exists? ->  volume state needs changes')
+				state = "need changes"
+			end
+		end
 
 		if state == "need changes"
 			Puppet.debug('lif modify? -> exist? = true: lif need changes')
