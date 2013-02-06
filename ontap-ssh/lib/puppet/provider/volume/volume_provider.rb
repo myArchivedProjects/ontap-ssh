@@ -163,7 +163,7 @@ Puppet::Type.type(:volume).provide(:volume_provider) do
 				end
 
 		                #execute
-				Puppet.debug('lif create -> modifying lif')
+				Puppet.debug('volume create -> modifying volume')
 		                output = ONTAPfunctions::connection(filerargs, command, results)
 
 
