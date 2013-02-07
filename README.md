@@ -4,6 +4,8 @@
 #  * volumes: creates, deletes and modifies some parameters
 #  * lifs: creates, deletes  lifs
 #  * ontap_users: creates, deletes users
+#  * export_policy: creates, deletes export policy
+#  * export_policy_rule: creates, modify, deletes export policy rules
 
 # This modules uses ssh to connect to the netapp controllers
 # it requires rubygems and net-ssh to be installed 
