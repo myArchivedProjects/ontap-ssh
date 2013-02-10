@@ -56,13 +56,14 @@ Puppet::Type.type(:vserver).provide(:vserver_provider) do
 		#match vserver properties with definitions in the manifest
 		state = "nochanges"
 
-		if (  [ "aggr_list","all" ].include?(property) )
-			#check for aggr_list changes
-			unless (resource[:aggr_list].upcase == output.scan(/.*List of Aggregates Assigned:.(.*).*/).to_s.upcase.chomp)
-				Puppet.debug('vserver exists? -> aggr_list need changes')
-				state = "need changes"
-			end
-		end
+		#aggr_list is breaking first run of vserver create
+		#if (  [ "aggr_list","all" ].include?(property) )
+		#	#check for aggr_list changes
+		#	unless (resource[:aggr_list].upcase == output.scan(/.*List of Aggregates Assigned:.(.*).*/).to_s.upcase.chomp)
+		#		Puppet.debug('vserver exists? -> aggr_list need changes')
+		#		state = "need changes"
+		#	end
+		#end
 
 		if (  [ "snapshot_policy","all" ].include?(property) )
 			#check for snapshot_policy changes
