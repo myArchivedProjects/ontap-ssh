@@ -178,7 +178,7 @@ Puppet::Type.type(:vserver).provide(:vserver_provider) do
 				# 
 				if defined? resource[:comment]
 				 	command+= " -comment " + resource[:comment]
-				 	Puppet.debut("vserver create -> adding comment")
+				 	Puppet.debug("vserver create -> adding comment")
 				end
 				#
 				#
